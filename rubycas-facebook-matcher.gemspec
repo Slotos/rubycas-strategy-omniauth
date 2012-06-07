@@ -4,8 +4,8 @@ require File.expand_path('../lib/rubycas-facebook-matcher/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Dmitriy Soltys"]
   gem.email         = ["slotos@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Facebook-to-local user matching functionality for rubycas-server}
+  gem.summary       = %q{Provides ability to authenticate users against Facebook oauth service as part of your CAS SSO functionality}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
