@@ -19,4 +19,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency "rubycas-server"
   gem.add_dependency "omniauth-facebook"
   gem.add_dependency "typhoeus"
+
+  gem.add_development_dependency "sqlite3"
+  gem.add_development_dependency "rspec"
+  gem.add_development_dependency "rack-test"
 end
