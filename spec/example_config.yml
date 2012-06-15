@@ -1,0 +1,13 @@
+matcher:
+  facebook:
+    database:
+      adapter: sqlite
+      database: spec.sqlite
+    user_table: users
+    username_column: email
+    token_table: access_tokens
+    foreign_key_column: user_id
+    provider_column: provider
+    consumerkey: ''    # facebook App ID
+    consumersecret: '' # facebook App secret
+    redirect_new: 'https://haha.says.me/'

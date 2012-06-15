@@ -29,7 +29,7 @@ module CASServer
         # Faraday won't work with facebook ssl certificate on some machines when using net/http. Using another adapter.
         Faraday.default_adapter = :typhoeus
 
-        settings = app.config[:matcher][:facebook]
+        settings = app.config["matcher"]["facebook"]
 
         app.set :facebook_matcher, Worker.new(settings)
         
@@ -43,11 +43,8 @@ module CASServer
         app.get "#{app.uri_path}/auth/facebook/callback" do
           auth = request.env['omniauth.auth']
 
-          if match = app.settings.facebook_matcher.match(auth[:uid])
-            @username = match[:email]
-            @service = session[:service]
-
-            confirm_authentication!
+          if match = app.settings.facebook_matcher.match(auth["uid"])
+            confirm_authentication!( match[:email], session["service"] )
           end
 
           # Redirect to login page if we're still here. Preserve service and renew data
