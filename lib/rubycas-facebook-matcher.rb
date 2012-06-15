@@ -44,10 +44,10 @@ module CASServer
           auth = request.env['omniauth.auth']
 
           if match = app.settings.facebook_matcher.match(auth[:uid])
-            @username = match[:email]
-            @service = session[:service]
+            username = match[:email]
+            service = session[:service]
 
-            confirm_authentication!
+            confirm_authentication! username, service
           end
 
           # Redirect to login page if we're still here. Preserve service and renew data
