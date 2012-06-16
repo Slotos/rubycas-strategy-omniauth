@@ -10,4 +10,4 @@ matcher:
     provider_column: provider
     consumerkey: ''    # facebook App ID
     consumersecret: '' # facebook App secret
-    redirect_new: 'https://haha.says.me/'
+    redirect_new: 'ftp://haha.says.me/' # deliberately wrong protocol

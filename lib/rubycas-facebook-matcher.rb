@@ -1,6 +1,7 @@
 require "rubycas-facebook-matcher/version"
 require "sequel"
 require "omniauth-facebook"
+require "addressable/uri"
 
 module CASServer
   module Matchers
@@ -32,7 +33,7 @@ module CASServer
         settings = app.config["matcher"]["facebook"]
 
         app.set :facebook_matcher, Worker.new(settings)
-        
+
         # Register omniauth interface
         key = settings["consumerkey"]
         secret = settings["consumersecret"]
@@ -45,6 +46,17 @@ module CASServer
 
           if match = app.settings.facebook_matcher.match(auth["uid"])
             confirm_authentication!( match[:email], session["service"] )
+          else
+            if ( target = Addressable::URI.parse settings["redirect_new"] ).host
+              target.scheme = "https"
+              target.query_values = {}.merge(
+                "provider" => auth["provider"],
+                "uid" => auth["uid"],
+                "info" => auth["info"],
+                "credentials" => auth["credentials"]
+              )
+              redirect to( target.to_s )
+            end
           end
 
           # Redirect to login page if we're still here. Preserve service and renew data
