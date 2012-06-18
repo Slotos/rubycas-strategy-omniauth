@@ -60,10 +60,13 @@ module CASServer
           end
 
           # Redirect to login page if we're still here. Preserve service and renew data
-          redirect_params = []
-          redirect_params << "service=#{CGI.escape session[:service]}" if session[:service]
-          redirect_params << "renew=#{session[:renew]}" if session[:renew]
-          redirect to("#{app.uri_path}/login?#{redirect_params.join('&')}"), 303
+          redirector = Addressable::URI.new
+          redirector.query_values = {
+              :service => session[:service],
+              :renew => session[:renew]
+          }.delete_if{|_,v| v.nil? || v.empty?}
+          redirector.path = "#{app.uri_path}/login"
+          redirect to(redirector.to_s), 303
         end
 
         app.add_oauth_link app.settings.facebook_matcher.link("/auth/facebook")
