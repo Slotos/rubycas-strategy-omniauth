@@ -32,7 +32,7 @@ module CASServer
 
         settings = app.workhorse
 
-        app.set :facebook_matcher, Worker.new(settings)
+        app.set :facebook_worker, Worker.new(settings)
 
         # Register omniauth interface
         key = settings["consumerkey"]
@@ -44,7 +44,7 @@ module CASServer
         app.get "#{app.uri_path}/auth/facebook/callback" do
           auth = request.env['omniauth.auth']
 
-          if match = app.settings.facebook_matcher.match(auth["uid"])
+          if match = app.settings.facebook_worker.match(auth["uid"])
             confirm_authentication!( match[:email], session["service"] )
           else
             if ( target = Addressable::URI.parse settings["redirect_new"].to_s ).host
@@ -81,7 +81,7 @@ module CASServer
           redirect to(redirector.to_s), 303
         end
 
-        app.add_oauth_link app.settings.facebook_matcher.link("#{app.uri_path}/auth/facebook")
+        app.add_oauth_link app.settings.facebook_worker.link("#{app.uri_path}/auth/facebook")
       end
     end
   end
