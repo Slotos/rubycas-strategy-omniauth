@@ -1,4 +1,4 @@
-# CASServer::Matchers::Facebook
+# CASServer::Strategy::Facebook
 
 Provides mechanism to authenticate user with Facebook and then match them against your central SQL user database
 
