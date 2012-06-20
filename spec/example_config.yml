@@ -1,4 +1,4 @@
-matcher:
+strategy:
   facebook:
     database:
       adapter: sqlite

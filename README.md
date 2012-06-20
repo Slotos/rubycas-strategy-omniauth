@@ -8,7 +8,7 @@ Ensure this gem is reachable by rubycase server, which depends on how you run it
 
 If you run rubycase-server as sinatra, be it alone or mounted to another app - add this line to Gemfile:
 
-    gem 'rubycas-facebook-matcher', :git => git://github.com/Slotos/rubycas-facebook-matcher.git
+    gem 'rubycas-strategy-facebook', :git => git://github.com/Slotos/rubycas-strategy-facebook.git
 
 And then execute:
 
@@ -16,16 +16,16 @@ And then execute:
 
 If you run is as centralized system service - install gem by running:
 
-    gem install rubycas-facebook-matcher
+    gem install rubycas-strategy-facebook
 
 Of course I lied, there's no way to install it that way unless I release it as a gem =P
 
 ## Usage
 
-For now you'll have to use `generic_matchers` branch from my fork of rubycas-server if you want to use this matcher. All you need to do is add this definition to your config.yml (database line is Sequel compatible):
+For now you'll have to use my fork of rubycas-server if you want to use this strategy. All you need to do is add this definition to your config.yml (database line is Sequel compatible):
 
 ````yaml
-matcher:
+strategy:
   facebook:
     database:
       adapter: mysql2

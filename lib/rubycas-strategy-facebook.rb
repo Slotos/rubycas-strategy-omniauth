@@ -1,10 +1,10 @@
-require "rubycas-facebook-matcher/version"
+require "rubycas-strategy-facebook/version"
 require "sequel"
 require "omniauth-facebook"
 require "addressable/uri"
 
 module CASServer
-  module Matchers
+  module Strategy
     module Facebook
       class Worker
         def initialize(config)
@@ -30,7 +30,7 @@ module CASServer
         # Faraday won't work with facebook ssl certificate on some machines when using net/http. Using another adapter.
         Faraday.default_adapter = :typhoeus
 
-        settings = app.config["matcher"]["facebook"]
+        settings = app.workhorse
 
         app.set :facebook_matcher, Worker.new(settings)
 
@@ -69,7 +69,19 @@ module CASServer
           redirect to(redirector.to_s), 303
         end
 
-        app.add_oauth_link app.settings.facebook_matcher.link("/auth/facebook")
+        app.get "#{app.uri_path}/auth/failure", :when_params => {"strategy" => "facebook"} do
+          redirector = Addressable::URI.new
+          redirector.query_values = {
+            :service => session[:service],
+            :renew => session[:renew],
+            :oauth_error => params[:message],
+            :oauth_strategy => params[:strategy]
+          }.delete_if{|_,v| v.nil? || v.empty?}
+          redirector.path = "#{app.uri_path}/login"
+          redirect to(redirector.to_s), 303
+        end
+
+        app.add_oauth_link app.settings.facebook_matcher.link("#{app.uri_path}/auth/facebook")
       end
     end
   end

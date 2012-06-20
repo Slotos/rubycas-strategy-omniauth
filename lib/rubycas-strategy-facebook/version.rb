@@ -1,5 +1,5 @@
 module CASServer
-  module Matchers
+  module Strategy
     module Facebook
       VERSION = "0.0.1"
     end

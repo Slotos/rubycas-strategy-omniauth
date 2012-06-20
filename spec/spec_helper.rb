@@ -14,7 +14,7 @@ def config
 end
 
 def init_db!
-  @database = config["matcher"]["facebook"]["database"]
+  @database = config["strategy"]["facebook"]["database"]
   db = Sequel.connect(@database)
   db.create_table :users do
     primary_key :id
@@ -46,7 +46,7 @@ end
 RSpec.configure do |conf|
   conf.include Rack::Test::Methods
   conf.after :all do
-    FileUtils.rm_f(config["matcher"]["facebook"]["database"]["database"])
+    FileUtils.rm_f(config["strategy"]["facebook"]["database"]["database"])
   end
   conf.before :all do
     init_db!
@@ -60,12 +60,12 @@ def set_omniauth(opts = {})
   default = {:provider => :facebook,
              :uuid     => "1234",
              :facebook => {
-                            :email => "foobar@example.com",
-                            :gender => "Male",
-                            :first_name => "foo",
-                            :last_name => "bar"
-                          }
-            }
+    :email => "foobar@example.com",
+    :gender => "Male",
+    :first_name => "foo",
+    :last_name => "bar"
+  }
+  }
 
   credentials = default.merge(opts)
   provider = credentials[:provider]
@@ -78,12 +78,12 @@ def set_omniauth(opts = {})
     'uid' => credentials[:uuid],
     "extra" => {
     "user_hash" => {
-      "email" => user_hash[:email],
-      "first_name" => user_hash[:first_name],
-      "last_name" => user_hash[:last_name],
-      "gender" => user_hash[:gender]
-      }
-    }
+    "email" => user_hash[:email],
+    "first_name" => user_hash[:first_name],
+    "last_name" => user_hash[:last_name],
+    "gender" => user_hash[:gender]
+  }
+  }
   }
 end
 
@@ -91,7 +91,7 @@ def set_invalid_omniauth(opts = {})
 
   credentials = { :provider => :facebook,
                   :invalid  => :invalid_crendentials
-                 }.merge(opts)
+  }.merge(opts)
 
   OmniAuth.config.test_mode = true
   OmniAuth.config.mock_auth[credentials[:provider]] = credentials[:invalid]
@@ -104,6 +104,28 @@ class CASServer::Mock < Sinatra::Base
   enable :sessions
   set :config, config
 
+  # the easiest way to check if these are preserved on redirects
+  enable :sessions
+
+  def self.when_params(*args)
+    desired_params = Hash[args]
+
+    condition {
+      desired_params.delete_if do |k,v|
+      params[k.to_s] == v
+      end
+    desired_params.empty?
+    }
+  end
+
+  def self.with_params(*args)
+    args = [args] unless args.kind_of?(::Array)
+    condition {
+      (args.map(&:to_s) - params.keys.map(&:to_s)).empty?
+    }
+  end
+
+
   def self.uri_path
     ""
   end
@@ -112,8 +134,9 @@ class CASServer::Mock < Sinatra::Base
     @oauth_link = link
   end
 
-  require File.expand_path(File.dirname(File.dirname(__FILE__)) + '/lib/rubycas-facebook-matcher')
-  register CASServer::Matchers::Facebook
+  set :workhorse, config["strategy"]["facebook"]
+  require File.expand_path(File.dirname(File.dirname(__FILE__)) + '/lib/rubycas-strategy-facebook')
+  register CASServer::Strategy::Facebook
 end
 
 def app

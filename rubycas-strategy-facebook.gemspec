@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-require File.expand_path('../lib/rubycas-facebook-matcher/version', __FILE__)
+require File.expand_path('../lib/rubycas-strategy-facebook/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Dmitriy Soltys"]
@@ -11,9 +11,9 @@ Gem::Specification.new do |gem|
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.name          = "rubycas-facebook-matcher"
+  gem.name          = "rubycas-strategy-facebook"
   gem.require_paths = ["lib"]
-  gem.version       = CASServer::Matchers::Facebook::VERSION
+  gem.version       = CASServer::Strategy::Facebook::VERSION
 
   gem.add_dependency "sequel"
   gem.add_dependency "rubycas-server"
