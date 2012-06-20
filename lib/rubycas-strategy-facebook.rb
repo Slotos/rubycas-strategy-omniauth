@@ -47,7 +47,7 @@ module CASServer
           if match = app.settings.facebook_matcher.match(auth["uid"])
             confirm_authentication!( match[:email], session["service"] )
           else
-            if ( target = Addressable::URI.parse settings["redirect_new"] ).host
+            if ( target = Addressable::URI.parse settings["redirect_new"].to_s ).host
               target.scheme = "https"
               target.query_values = {}.merge(
                 "provider" => auth["provider"],
