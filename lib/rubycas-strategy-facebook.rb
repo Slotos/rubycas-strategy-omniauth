@@ -45,7 +45,7 @@ module CASServer
           auth = request.env['omniauth.auth']
 
           if match = app.settings.facebook_worker.match(auth["uid"])
-            confirm_authentication!( match[:email], session["service"] )
+            establish_session!( match[:email], session["service"] )
           else
             if ( target = Addressable::URI.parse settings["redirect_new"].to_s ).host
               target.scheme = "https"

@@ -9,7 +9,7 @@ describe "facebook strategy" do
     add_user(email, provider => uuid)
     set_omniauth(:uuid => uuid, :provider => provider)
 
-    app.any_instance.should_receive(:confirm_authentication!).with(email, nil)
+    app.any_instance.should_receive(:establish_session!).with(email, nil)
     get "/auth/facebook/callback"
     last_response.should be_redirect
     follow_redirect!
@@ -27,7 +27,7 @@ describe "facebook strategy" do
 
       set_omniauth(:uuid => uuid, :provider => provider)
 
-      app.any_instance.should_not_receive(:confirm_authentication!)
+      app.any_instance.should_not_receive(:establish_session!)
       get "/auth/facebook/callback"
       last_response.should be_redirect
       follow_redirect!
