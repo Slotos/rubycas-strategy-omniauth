@@ -1,11 +1,10 @@
-require "rubycas-strategy-facebook/version"
+require "rubycas-strategy-omniauth/version"
 require "sequel"
-require "omniauth-facebook"
 require "addressable/uri"
 
 module CASServer
   module Strategy
-    module Facebook
+    module Omniauth
       class Worker
         def initialize(config)
           raise "Expecting config" unless config.is_a?(::Hash)
@@ -20,19 +19,18 @@ module CASServer
           raise "Multiple matches, database tainted" if matcher.count > 1
           matcher.first
         end
-
-        def link(path)
-          %[<a href="#{path}"><img alt="Log in with Facebook" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAMAAAAM7l6QAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAV9QTFRFVHCncIi2cYm2bYW0XXisPFyZ4ebvMlOUOFiXKkyQLlCSna3MMVKULE+Rnq7NyNHjQF+cusXbOVmYPV2aNleW8PL3OFmXM1SVVnKotMDYeI65b4e1rbvUL1GTlafJjqHEwszfNVWWJkmO6+/0U2+mnKzLbISy5urxZ4CxzNTlzdXmPFyal6jJT2ykVXGnX3qtuMTaPl2aOluZIESLx9Diu8bbTGmjt8PaKEuPSGagKUuQwcvfvsndKUyPOlqYXnisW3aqPVyZNleXNlaW6u30/f3+RWOeYHutXHar2d/s3eLt193qMVOUY32vUm6ldIu3coq3tsHZ3OLsc4m1dYy5YHqtG0CIOFiYw83gVnGoMFKTucTbnKzMwszgboa1c4u4oK/Oz9fmxs/ir7zWdo25ZoCxTGmidIy4X3itTWqihJi/HEGIp7bRb4a0N1iXa4OzeY+6N1eXQWCc////O1uZx/K/HgAAABB0Uk5T////////////////////AOAjXRkAAAEvSURBVHjarNNXb8IwFIZhQ5uELGhTICmjQIHuvTfde++9907C/1e/gFSrwslV36sjPbJ0LMskZHkUIkXPiOWlFov7AgLSXdic2ePRgM7i9vVFfsFGzQKL51527VI8k0fey2pHFBaP5UFrTbHYR5TBgakd8HV/MqlwLO4dBMsS896c2qjWgxveRFGtPG2m8sFV8E2HLKfMClYi9m+MzQWeMuPeSpZytvJ0JjF+PO+cnEinExn3zQ+Zm+PedbXgoOTy3v/N0bBJ07Ue8PkkxrAGruE2D6pp09234LscxqWhI4cLVz7a5XYb+OwB49OJ6fCyr4r2FW8FD29g9JMSP+/7afGtFfBFC8Z7A2xxjwah5bpeZVn+7sRojGoWPtGfzc1ZSRTF08/y5kXi/QV/BBgA/go2OS2QHDcAAAAASUVORK5CYII=" /></a> ]
-        end
       end
 
       def self.registered(app)
+        settings = app.workhorse
+
+        require settings['omniauth-strategy'] || "omniauth-#{settings['provider']}"
+
         # Faraday won't work with facebook ssl certificate on some machines when using net/http. Using another adapter.
         Faraday.default_adapter = :typhoeus
 
-        settings = app.workhorse
-
-        app.set :facebook_worker, Worker.new(settings)
+        worker_name = :"#{settings['provider']}_worker"
+        app.set worker_name, Worker.new(settings)
 
         # Register omniauth interface
         key = settings["consumerkey"]
@@ -59,11 +57,10 @@ module CASServer
             end
           end
 
-          # Redirect to login page if we're still here. Preserve service and renew data
+          # Redirect to login page if we're still here. Preserve service data
           redirector = Addressable::URI.new
           redirector.query_values = {
               :service => session[:service],
-              :renew => session[:renew]
           }.delete_if{|_,v| v.nil? || v.empty?}
           redirector.path = "#{app.uri_path}/login"
           redirect to(redirector.to_s), 303

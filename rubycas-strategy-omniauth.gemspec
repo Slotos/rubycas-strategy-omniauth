@@ -1,27 +1,27 @@
 # -*- encoding: utf-8 -*-
-require File.expand_path('../lib/rubycas-strategy-facebook/version', __FILE__)
+require File.expand_path('../lib/rubycas-strategy-omniauth/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Dmitriy Soltys"]
   gem.email         = ["slotos@gmail.com"]
-  gem.description   = %q{Facebook-to-local user matching functionality for rubycas-server}
-  gem.summary       = %q{Provides ability to authenticate users against Facebook oauth service as part of your CAS SSO functionality}
+  gem.description   = %q{Omniauth oauth-local user matching functionality for rubycas-server}
+  gem.summary       = %q{Provides ability to authenticate users against oauth services as part of your CAS SSO functionality}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.name          = "rubycas-strategy-facebook"
+  gem.name          = "rubycas-strategy-omniauth"
   gem.require_paths = ["lib"]
-  gem.version       = CASServer::Strategy::Facebook::VERSION
+  gem.version       = CASServer::Strategy::Omniauth::VERSION
 
   gem.add_dependency "sequel"
   gem.add_dependency "rubycas-server"
-  gem.add_dependency "omniauth-facebook"
   gem.add_dependency "typhoeus"
   gem.add_dependency "addressable"
 
   gem.add_development_dependency "sqlite3"
   gem.add_development_dependency "rspec"
   gem.add_development_dependency "rack-test"
+  gem.add_development_dependency "omniauth-facebook"
 end

@@ -14,7 +14,7 @@ def config
 end
 
 def init_db!
-  @database = config["strategy"]["facebook"]["database"]
+  @database = config["strategies"]["database"]
   db = Sequel.connect(@database)
   db.create_table :users do
     primary_key :id
@@ -46,7 +46,7 @@ end
 RSpec.configure do |conf|
   conf.include Rack::Test::Methods
   conf.after :all do
-    FileUtils.rm_f(config["strategy"]["facebook"]["database"]["database"])
+    FileUtils.rm_f(config["strategies"]["database"]["database"])
   end
   conf.before :all do
     init_db!
@@ -134,9 +134,9 @@ class CASServer::Mock < Sinatra::Base
     @oauth_link = link
   end
 
-  set :workhorse, config["strategy"]["facebook"]
-  require File.expand_path(File.dirname(File.dirname(__FILE__)) + '/lib/rubycas-strategy-facebook')
-  register CASServer::Strategy::Facebook
+  set :workhorse, config["strategies"]
+  require File.expand_path(File.dirname(File.dirname(__FILE__)) + '/lib/rubycas-strategy-omniauth')
+  register CASServer::Strategy::Omniauth
 end
 
 def app
