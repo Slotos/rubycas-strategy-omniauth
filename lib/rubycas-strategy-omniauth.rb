@@ -48,7 +48,7 @@ module CASServer
 
         # Register omniauth interface
         app.use ::OmniAuth::Builder do
-          provider omniauth['provider'], *omniauth['provider_args']
+          provider omniauth['provider'], *omniauth['args']
         end
 
         auth_name = ::OmniAuth::Strategies.const_get( ::OmniAuth::Utils.camelize(omniauth['provider']) ).default_options['name'] || omniauth['provider']
