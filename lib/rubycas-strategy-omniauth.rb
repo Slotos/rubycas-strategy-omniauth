@@ -4,48 +4,70 @@ require "addressable/uri"
 
 module CASServer
   module Strategy
-    module Omniauth
+    module OmniAuth
       class Worker
         def initialize(config)
           raise "Expecting config" unless config.is_a?(::Hash)
-          @token_table = config['token_table']
+          @config = config
+          return if @config['passthrough']
 
-          @connection = Sequel.connect(config['database'])
-          @dataset = @connection.from(config['token_table']).join(config['user_table'].to_sym, :id => config['foreign_key_column'].to_sym).where(config['provider_column'].to_sym => 'facebook')
+          @connection = Sequel.connect(@config['database'])
+          @dataset = @connection.
+            from( @config['token_table'] ).
+            join( :"#{@config['user_table']}", :id => :"#{@config['foreign_key']}" ).
+            where( :"#{@config['provider_column']}" => @config['provider_name'])
         end
 
         def match(uid)
-          matcher = @dataset.where("#{@token_table}__uid".to_sym => uid)
+          return uid if @config['passthrough']
+          matcher = @dataset.where(:"#{@config['token_table']}__#{@config['uid_column']}" => uid)
           raise "Multiple matches, database tainted" if matcher.count > 1
-          matcher.first
+          matcher.first[:"#{@config['username_column']}"] if matcher.first
+        end
+
+        def link(url, text = nil)
+          %(<a href="#{url}">#{text}</a>)
         end
       end
 
       def self.registered(app)
         settings = app.workhorse
+        omniauth = settings['omniauth']
+        matcher = settings['matcher']
 
-        require settings['omniauth-strategy'] || "omniauth-#{settings['provider']}"
+        require omniauth['strategy'] || "omniauth-#{omniauth['provider']}"
 
         # Faraday won't work with facebook ssl certificate on some machines when using net/http. Using another adapter.
-        Faraday.default_adapter = :typhoeus
+        Faraday.default_adapter = :typhoeus if Kernel.const_defined?("Faraday")
 
-        worker_name = :"#{settings['provider']}_worker"
-        app.set worker_name, Worker.new(settings)
+        worker_name = :"#{omniauth['provider']}_worker"
+        worker_settings = :"#{omniauth['provider']}_settings"
+        matcher['provider_name'] ||= omniauth['provider'] # this will rarely differ
+        app.set worker_name, Worker.new(matcher)
+        app.set worker_settings, matcher
 
         # Register omniauth interface
-        key = settings["consumerkey"]
-        secret = settings["consumersecret"]
         app.use ::OmniAuth::Builder do
-          provider :facebook, key, secret
+          provider omniauth['provider'], *omniauth['provider_args']
         end
 
-        app.get "#{app.uri_path}/auth/facebook/callback" do
+        auth_name = ::OmniAuth::Strategies.const_get( ::OmniAuth::Utils.camelize(omniauth['provider']) ).default_options['name'] || omniauth['provider']
+
+        # Omniauth callback
+        app.get "#{app.uri_path}/auth/#{auth_name}/callback" do
           auth = request.env['omniauth.auth']
 
-          if match = app.settings.facebook_worker.match(auth["uid"])
-            establish_session!( match[:email], session["service"] )
+          # Only the basic information that would allow service to address the user. No keys or anything, since any service can access CAS server.
+          # In case of facebook or twitter login without remote-to-local match username will be numeric unique identifier. That's the reason for this.
+          extra_attributes = {
+            "provider" => auth["provider"],
+            "info" => auth["info"]
+          }
+
+          if name = app.settings.send(worker_name).match(auth["uid"])
+            establish_session!( name, session["service"], extra_attributes )
           else
-            if ( target = Addressable::URI.parse settings["redirect_new"].to_s ).host
+            if ( target = Addressable::URI.parse matcher["redirect_new"].to_s ).host
               target.scheme = "https"
               target.query_values = {}.merge(
                 "provider" => auth["provider"],
@@ -66,7 +88,8 @@ module CASServer
           redirect to(redirector.to_s), 303
         end
 
-        app.get "#{app.uri_path}/auth/failure", :when_params => {"strategy" => "facebook"} do
+        # Omniauth failure, limited to our specific strategy.
+        app.get "#{app.uri_path}/auth/failure", :when_params => {"strategy" => auth_name} do
           redirector = Addressable::URI.new
           redirector.query_values = {
             :service => session[:service],
@@ -78,7 +101,7 @@ module CASServer
           redirect to(redirector.to_s), 303
         end
 
-        app.add_oauth_link app.settings.facebook_worker.link("#{app.uri_path}/auth/facebook")
+        app.add_login_link app.settings.send(worker_name).link("#{app.uri_path}/auth/#{auth_name}", settings['link_text'] || "Login with #{omniauth['provider'].capitalize}")
       end
     end
   end

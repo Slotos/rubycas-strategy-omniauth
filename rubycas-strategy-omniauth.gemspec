@@ -4,7 +4,7 @@ require File.expand_path('../lib/rubycas-strategy-omniauth/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Dmitriy Soltys"]
   gem.email         = ["slotos@gmail.com"]
-  gem.description   = %q{Omniauth oauth-local user matching functionality for rubycas-server}
+  gem.description   = %q{OmniAuth strategy adapter for rubycas-server}
   gem.summary       = %q{Provides ability to authenticate users against oauth services as part of your CAS SSO functionality}
   gem.homepage      = ""
 
@@ -13,7 +13,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "rubycas-strategy-omniauth"
   gem.require_paths = ["lib"]
-  gem.version       = CASServer::Strategy::Omniauth::VERSION
+  gem.version       = CASServer::Strategy::OmniAuth::VERSION
 
   gem.add_dependency "sequel"
   gem.add_dependency "rubycas-server"

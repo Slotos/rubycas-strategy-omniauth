@@ -1,0 +1,7 @@
+strategies:
+  strategy: Omniauth
+  omniauth: # it gets transformed into `OmniAuth::Builder { provider omniauth['provider'], *omniauth['args'] }` roughly.
+    provider: facebook
+    args: ['key', 'secret']
+  matcher:
+    passthrough: true

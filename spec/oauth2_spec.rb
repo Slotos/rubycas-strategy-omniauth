@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-describe "facebook strategy" do
-  it "should confirm authentication for oauth user with a match" do
+describe "generic oauth2 strategy" do
+  it "should authenticate oauth user with a match" do
     email = "random@random.test"
     uuid = 40
     provider = :facebook
@@ -9,7 +9,7 @@ describe "facebook strategy" do
     add_user(email, provider => uuid)
     set_omniauth(:uuid => uuid, :provider => provider)
 
-    app.any_instance.should_receive(:establish_session!).with(email, nil)
+    app.any_instance.should_receive(:establish_session!).with(email, nil, kind_of(Hash))
     get "/auth/facebook/callback"
     last_response.should be_redirect
     follow_redirect!
@@ -18,7 +18,7 @@ describe "facebook strategy" do
 
   describe "redirect oauth user without a match" do
 
-    let(:redirect_url){ config["strategy"]["facebook"]["redirect_new"].gsub(/^[a-z]+:\/\//, "https://") }
+    let(:redirect_url){ $config["strategies"]["matcher"]["redirect_new"].gsub(/^[a-z]+:\/\//, "https://") }
 
     before :each do
       email = "unknown@random.test"
@@ -75,7 +75,7 @@ describe "facebook strategy" do
         last_response.should be_redirect
         follow_redirect!
       end
-      
+
       it do
         last_request.url.should =~ /\/login/
       end
@@ -95,6 +95,24 @@ describe "facebook strategy" do
       it "sends oauth strategy name to login page" do
         last_request.url.should =~ /\?.*oauth_strategy=facebook/
       end
+    end
+
+  end
+
+  describe "with passthrough enabled" do
+    it "should authenticate oauth user" do
+      load_server File.expand_path(File.dirname(__FILE__) + '/passthrough_config.yml')
+      @browser = Rack::Test::Session.new( Rack::MockSession.new( CASServer::Mock ) )
+      uuid = 40
+      provider = :facebook
+
+      set_omniauth(:uuid => uuid, :provider => provider)
+
+      CASServer::Mock.any_instance.should_receive(:establish_session!).with(uuid, nil, kind_of(Hash))
+      @browser.get "/auth/facebook/callback"
+      @browser.last_response.should be_redirect
+      @browser.follow_redirect!
+      @browser.last_request.url.should =~ /\/login$/
     end
 
   end

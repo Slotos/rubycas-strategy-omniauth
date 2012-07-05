@@ -9,12 +9,17 @@ set :run, false
 set :raise_errors, true
 set :logging, false
 
-def config
-  @config ||= YAML.load_file( File.expand_path(File.dirname(__FILE__) + '/example_config.yml') )
+def load_server(config)
+  $config = YAML.load_file config
+  load 'cas_mock.rb'
 end
 
+# using this to track all the database files I may create
+$databases = []
+
 def init_db!
-  @database = config["strategies"]["database"]
+  @database = $config["strategies"]["matcher"]["database"]
+  $databases << @database["database"]
   db = Sequel.connect(@database)
   db.create_table :users do
     primary_key :id
@@ -46,7 +51,9 @@ end
 RSpec.configure do |conf|
   conf.include Rack::Test::Methods
   conf.after :all do
-    FileUtils.rm_f(config["strategies"]["database"]["database"])
+    $databases.each do |db|
+      FileUtils.rm_f(db)
+    end
   end
   conf.before :all do
     init_db!
@@ -57,14 +64,15 @@ end
 # You can read about this gist at: http://wealsodocookies.com/posts/how-to-test-facebook-login-using-devise-omniauth-rspec-and-capybara
 
 def set_omniauth(opts = {})
-  default = {:provider => :facebook,
-             :uuid     => "1234",
-             :facebook => {
-    :email => "foobar@example.com",
-    :gender => "Male",
-    :first_name => "foo",
-    :last_name => "bar"
-  }
+  default = {
+    :provider => :facebook,
+    :uuid     => "1234",
+    :facebook => {
+      :email => "foobar@example.com",
+      :gender => "Male",
+      :first_name => "foo",
+      :last_name => "bar"
+    }
   }
 
   credentials = default.merge(opts)
@@ -75,22 +83,23 @@ def set_omniauth(opts = {})
 
   OmniAuth.config.mock_auth[provider] = {
     'provider' => credentials[:provider],
-    'uid' => credentials[:uuid],
-    "extra" => {
-    "user_hash" => {
-    "email" => user_hash[:email],
-    "first_name" => user_hash[:first_name],
-    "last_name" => user_hash[:last_name],
-    "gender" => user_hash[:gender]
-  }
-  }
+      'uid' => credentials[:uuid],
+      "extra" => {
+        "user_hash" => {
+        "email" => user_hash[:email],
+        "first_name" => user_hash[:first_name],
+        "last_name" => user_hash[:last_name],
+        "gender" => user_hash[:gender]
+      }
+    }
   }
 end
 
 def set_invalid_omniauth(opts = {})
 
-  credentials = { :provider => :facebook,
-                  :invalid  => :invalid_crendentials
+  credentials = {
+    :provider => :facebook,
+    :invalid  => :invalid_crendentials
   }.merge(opts)
 
   OmniAuth.config.test_mode = true
@@ -100,44 +109,7 @@ end
 
 # END borrowed
 
-class CASServer::Mock < Sinatra::Base
-  enable :sessions
-  set :config, config
-
-  # the easiest way to check if these are preserved on redirects
-  enable :sessions
-
-  def self.when_params(*args)
-    desired_params = Hash[args]
-
-    condition {
-      desired_params.delete_if do |k,v|
-      params[k.to_s] == v
-      end
-    desired_params.empty?
-    }
-  end
-
-  def self.with_params(*args)
-    args = [args] unless args.kind_of?(::Array)
-    condition {
-      (args.map(&:to_s) - params.keys.map(&:to_s)).empty?
-    }
-  end
-
-
-  def self.uri_path
-    ""
-  end
-
-  def self.add_oauth_link(link)
-    @oauth_link = link
-  end
-
-  set :workhorse, config["strategies"]
-  require File.expand_path(File.dirname(File.dirname(__FILE__)) + '/lib/rubycas-strategy-omniauth')
-  register CASServer::Strategy::Omniauth
-end
+load_server File.expand_path(File.dirname(__FILE__) + '/example_config.yml')
 
 def app
   CASServer::Mock

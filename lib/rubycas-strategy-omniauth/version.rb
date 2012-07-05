@@ -1,6 +1,6 @@
 module CASServer
   module Strategy
-    module Omniauth
+    module OmniAuth
       VERSION = "0.0.1"
     end
   end
