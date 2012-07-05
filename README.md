@@ -1,4 +1,4 @@
-# CASServer::Strategy::Omniauth
+# CASServer::Strategy::OmniAuth
 
 Provides mechanism to authenticate users with Omniauth strategies optionally matching them against your central SQL user database. The latter part was developed with devise in mind.
 
