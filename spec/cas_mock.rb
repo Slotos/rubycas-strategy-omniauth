@@ -21,7 +21,7 @@ class CASServer::Mock < Sinatra::Base
 
 
   def self.uri_path
-    ""
+    "/test"
   end
 
   def self.add_login_link(link)

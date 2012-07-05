@@ -10,7 +10,7 @@ describe "generic oauth2 strategy" do
     set_omniauth(:uuid => uuid, :provider => provider)
 
     app.any_instance.should_receive(:establish_session!).with(email, nil, kind_of(Hash))
-    get "/auth/facebook/callback"
+    get "#{app.uri_path}/auth/facebook/callback"
     last_response.should be_redirect
     follow_redirect!
     last_request.url.should =~ /\/login$/
@@ -28,7 +28,7 @@ describe "generic oauth2 strategy" do
       set_omniauth(:uuid => uuid, :provider => provider)
 
       app.any_instance.should_not_receive(:establish_session!)
-      get "/auth/facebook/callback"
+      get "#{app.uri_path}/auth/facebook/callback"
       last_response.should be_redirect
       follow_redirect!
     end
@@ -64,14 +64,14 @@ describe "generic oauth2 strategy" do
 
   describe "invalid onmiauth" do
     it "doesn't accept the route if it's not for facebook" do
-      get '/auth/failure?strategy=not_facebook'
+      get "#{app.uri_path}/auth/failure?strategy=not_facebook"
       last_response.should_not be_ok
     end
 
     describe "redirects to login page" do
       before :each do
         CASServer::Mock.any_instance.should_receive(:session).twice.and_return({:service => 'servicemane', :renew => 'true'})
-        get '/auth/failure?strategy=facebook&message=something'
+        get "#{app.uri_path}/auth/failure?strategy=facebook&message=something"
         last_response.should be_redirect
         follow_redirect!
       end
@@ -109,7 +109,7 @@ describe "generic oauth2 strategy" do
       set_omniauth(:uuid => uuid, :provider => provider)
 
       CASServer::Mock.any_instance.should_receive(:establish_session!).with(uuid, nil, kind_of(Hash))
-      @browser.get "/auth/facebook/callback"
+      @browser.get "#{app.uri_path}/auth/facebook/callback"
       @browser.last_response.should be_redirect
       @browser.follow_redirect!
       @browser.last_request.url.should =~ /\/login$/
