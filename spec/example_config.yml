@@ -1,13 +1,19 @@
-strategy:
-  facebook:
+strategies:
+  strategy: Omniauth
+  omniauth: # it gets transformed into `OmniAuth::Builder { provider omniauth['provider'], *omniauth['args'] }` roughly.
+    strategy: omniauth-facebook
+    provider: facebook
+    args: ['key', 'secret']
+  matcher:
     database:
       adapter: sqlite
       database: spec.sqlite
     user_table: users
     username_column: email
     token_table: access_tokens
-    foreign_key_column: user_id
+    foreign_key: user_id
+    uid_column: uid
     provider_column: provider
-    consumerkey: ''    # facebook App ID
-    consumersecret: '' # facebook App secret
+    provider_name: facebook
     redirect_new: 'ftp://haha.says.me/' # deliberately wrong protocol
+    passthrough: false
