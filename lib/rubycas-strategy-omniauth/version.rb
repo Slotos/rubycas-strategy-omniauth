@@ -1,6 +1,6 @@
 module CASServer
   module Strategy
-    module Facebook
+    module OmniAuth
       VERSION = "0.0.1"
     end
   end

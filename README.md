@@ -1,6 +1,6 @@
-# CASServer::Strategy::Facebook
+# CASServer::Strategy::Omniauth
 
-Provides mechanism to authenticate user with Facebook and then match them against your central SQL user database
+Provides mechanism to authenticate users with Omniauth strategies optionally matching them against your central SQL user database. The latter part was developed with devise in mind.
 
 ## Installation
 
@@ -9,6 +9,11 @@ Ensure this gem is reachable by rubycase server, which depends on how you run it
 If you run rubycase-server as sinatra, be it alone or mounted to another app - add this line to Gemfile:
 
     gem 'rubycas-strategy-facebook', :git => git://github.com/Slotos/rubycas-strategy-facebook.git
+
+Also remember to add whatever omniauth strategies you will employ. I.e. if you're going to use twitter and google omniauth strategies:
+
+    gem 'omniauth-twitter'
+    gem 'omniauth-google'
 
 And then execute:
 
@@ -22,29 +27,66 @@ Of course I lied, there's no way to install it that way unless I release it as a
 
 ## Usage
 
-For now you'll have to use my fork of rubycas-server if you want to use this strategy. All you need to do is add this definition to your config.yml (database line is Sequel compatible):
+For now you'll have to use my fork of rubycas-server if you want to use this strategy. Example configuration lines for config.yml follow (database line is Sequel compatible):
 
 ````yaml
-strategy:
-  facebook:
-    database:
-      adapter: mysql2
-      database: db
-      username: user
-      password: secret
-    user_table: users
-    username_column: email
-    token_table: access_tokens
-    foreign_key_column: user_id
-    provider_column: provider
-    consumerkey: ''    # facebook App ID
-    consumersecret: '' # facebook App secret
+strategies:
+  -
+    strategy: Omniauth
+    omniauth: # it gets transformed into `OmniAuth::Builder { provider omniauth['provider'], *omniauth['args'] }`.
+      strategy: omniauth-facebook # optional, for when omniauth strategy gem name cannot be derived from provider option
+      provider: facebook
+      args: ['key', 'secret']
+    matcher:
+      database:
+        adapter: mysql2
+        database: db
+        username: user
+        password: secret
+      user_table: users
+      username_column: email
+      token_table: access_tokens
+      foreign_key: user_id
+      uid_column: uid
+      provider_column: provider
+      provider_name: twitter # optional, uses omniauth provider name if missing
+      redirect_new: 'https://lvh.me/registration/' # Mind it, https protocol will be enforced, since sensitive data will be sent in GET request.
+  -
+    strategy: Omniauth
+    omniauth:
+      provider: twitter
+      args: ['key', 'secret']
+    matcher:
+      database:
+        adapter: mysql2
+        database: db
+        username: user
+        password: secret
+      user_table: users
+      username_column: email
+      token_table: access_tokens
+      foreign_key: user_id
+      uid_column: uid
+      provider_column: provider
+      redirect_new: 'https://lvh.me/registration/'
 ````
 
-## Contributing
+If you don't want to match users against your local data - provide `passthrough: true` for matcher:
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+````yaml
+strategies:
+  -
+    strategy: Omniauth
+    omniauth:
+      strategy: omniauth-google-oauth2
+      provider: google_oauth2
+      args:
+        - key
+        - secret
+        -
+          scope: "userinfo.email,userinfo.profile,https://www.googleapis.com/auth/calendar"
+    matcher:
+      passthrough: true
+````
+
+CAS server will provide `info` and `provider` data in extra attributes. For reference on what constitutes `info` and `provider` head to [OmniAuth wiki](https://github.com/intridea/omniauth/wiki/Auth-Hash-Schema)
