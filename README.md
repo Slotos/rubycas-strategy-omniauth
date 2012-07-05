@@ -8,7 +8,7 @@ Ensure this gem is reachable by rubycase server, which depends on how you run it
 
 If you run rubycase-server as sinatra, be it alone or mounted to another app - add this line to Gemfile:
 
-    gem 'rubycas-strategy-facebook', :git => git://github.com/Slotos/rubycas-strategy-facebook.git
+    gem 'rubycas-strategy-omniauth', :git => 'git://github.com/Slotos/rubycas-strategy-omniauth.git'
 
 Also remember to add whatever omniauth strategies you will employ. I.e. if you're going to use twitter and google omniauth strategies:
 
@@ -21,7 +21,7 @@ And then execute:
 
 If you run is as centralized system service - install gem by running:
 
-    gem install rubycas-strategy-facebook
+    gem install rubycas-strategy-omniauth
 
 Of course I lied, there's no way to install it that way unless I release it as a gem =P
 
