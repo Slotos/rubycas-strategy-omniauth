@@ -32,7 +32,7 @@ For now you'll have to use my fork of rubycas-server if you want to use this str
 ````yaml
 strategies:
   -
-    strategy: Omniauth
+    strategy: OmniAuth
     omniauth: # it gets transformed into `OmniAuth::Builder { provider omniauth['provider'], *omniauth['args'] }`.
       strategy: omniauth-facebook # optional, for when omniauth strategy gem name cannot be derived from provider option
       provider: facebook
@@ -52,7 +52,7 @@ strategies:
       provider_name: twitter # optional, uses omniauth provider name if missing
       redirect_new: 'https://lvh.me/registration/' # Mind it, https protocol will be enforced, since sensitive data will be sent in GET request.
   -
-    strategy: Omniauth
+    strategy: OmniAuth
     omniauth:
       provider: twitter
       args: ['key', 'secret']
@@ -76,7 +76,7 @@ If you don't want to match users against your local data - provide `passthrough:
 ````yaml
 strategies:
   -
-    strategy: Omniauth
+    strategy: OmniAuth
     omniauth:
       strategy: omniauth-google-oauth2
       provider: google_oauth2
